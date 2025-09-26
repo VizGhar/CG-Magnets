@@ -1,0 +1,10 @@
+read size:int
+loopline size columnMarker:int
+loopline size rowMarker:int
+read shipsCount:int
+loopline shipsCount shipLength:int
+loop size read line:word(size)
+loop size write xxxxxx
+
+STATEMENT
+Reconstruct the hidden fleet.

@@ -1,0 +1,123 @@
+<div id="statement_back" class="statement_back" style="display:none"></div>
+<div class="statement-body">
+    <!-- GOAL -->
+
+    <div class="statement-section statement-goal">
+        <h1>
+            <span class="icon icon-goal">&nbsp;</span>
+            <span>The Goal</span>
+        </h1>
+        <div class="statement-goal-content">
+            <p>You are given a <strong>grid</strong> representing a Battleships Solitaire puzzle. Your objective is to reconstruct the hidden <strong>fleet</strong> of ships by filling the grid according to the given clues.</p>
+        </div>
+    </div>
+
+    <div class="statement-section statement-rules">
+        <h1>
+            <span class="icon icon-rules">&nbsp;</span>
+            <span>Rules</span>
+        </h1>
+        <div>
+            <div class="statement-rules-content">
+                <p>A complete <strong>fleet of ships</strong> must be placed on the grid. The exact composition of the fleet (ship sizes and counts) is provided in the input and may vary between puzzles.</p>
+
+                <ul>
+                    <li>Ships are straight and occupy consecutive cells either horizontally or vertically.</li>
+                    <li>Ships cannot overlap or touch each other, not even diagonally.</li>
+                    <li>Some cells may already be revealed as <strong>water</strong> or as part of a ship.</li>
+                    <li>Numbers shown next to each row and column indicate how many ship cells must appear in that line.</li>
+                </ul>
+
+                <p>The goal is to place all ships so that every constraint is met and the final configuration matches the provided clues.</p>
+
+<div style="text-align:center;margin:15px">
+    <img src="https://cdn-games.codingame.com/community/3996809-1758310741063/6fb72a9c8ec6d4cdf117a9e527d81423fc3bc2a1354359eeebe6f0b6b6fbe33f.jpg"
+         style="width:400px;max-width:100%">
+    <div style="margin:auto;width:400px;max-width:100%">
+        <em>Solution example</em></div>
+</div>
+
+<p>
+    In the example above, you can see:
+    <ul>
+        <li>A single-cell ship (blue) occupies only one cell (<const>o</const>).</li>
+        <li>All ships of size <const>2</const> or more (yellow and green) have a bow cell (<const>^</const>, <const>&lt;</const>) and a stern cell (<const>v</const>, <const>&gt;</const>), with any middle segments (<const>#</const>) filling the space between.</li>
+        <li>A water cell (<const>x</const>) cannot contain any part of a ship.</li>
+        <li>An unknown cell (<const>.</const>) may either contain part of a ship or water.</li>
+        <li>The solution is invalid because 2 rows and 2 columns are not satisfied (red text).</li>
+        <li>The solution is also invalid because the red ship is diagonally adjacent to the green ship.</li>
+    </ul>
+</p>
+
+
+            </div>
+        </div>
+    </div>
+
+    <!-- EXAMPLES -->
+    <div class="statement-section statement-examples">
+        <h1>
+            <span class="icon icon-example">&nbsp;</span>
+            <span>Additional Info</span>
+        </h1>
+        <div class="statement-examples-text">
+            - Press the gear icon on the viewer to access extra display options<br/> - This puzzle is based on a logical <a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/magnets.html">game named Magnets by Simon Tatham</a><br> - Source code on <a href="https://github.com/VizGhar/CG-Magnets">my GitHub</a>
+        </div>
+    </div>
+
+    <!-- PROTOCOL -->
+    <div class="statement-section statement-protocol">
+    <h1>
+        <span class="icon icon-protocol">&nbsp;</span>
+        <span>Game Input</span>
+    </h1>
+
+    <div class="blk">
+        <div class="text">
+            <p><span class="statement-lineno">Line 1:</span> single integer <var>size</var>, the dimension of the square board.</p>
+            <p><span class="statement-lineno">Line 2:</span> <var>size</var> space-separated integers <var>columnMarker</var>, the hints for each column.</p>
+            <p><span class="statement-lineno">Line 3:</span> <var>size</var> space-separated integers <var>rowMarker</var>, the hints for each row.</p>
+            <p><span class="statement-lineno">Line 4:</span> single integer <var>shipsCount</var>, the number of ships to be placed on the board.</p>
+            <p><span class="statement-lineno">Line 5:</span> <var>shipsCount</var> space-separated integers <var>shipLength</var>, the length of each ship in the fleet.</p>
+            <p><span class="statement-lineno">Next <var>size</var> lines:</span> each line contains <var>size</var> characters representing a row of the board. Each character can be:</p>
+            <ul>
+                <li><const>.</const> : unresolved cell</li>
+                <li><const>^</const> : bow of a vertical ship (facing north)</li>
+                <li><const>v</const> : stern of a vertical ship (facing north)</li>
+                <li><const>&lt;</const> : bow of a horizontal ship (facing west)</li>
+                <li><const>></const> : stern of a horizontal ship (facing west)</li>
+                <li><const>#</const> : middle segment of a ship</li>
+                <li><const>o</const> : single-cell ship (submarine)</li>
+                <li><const>x</const> : water cell</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Protocol block -->
+    <div class="blk">
+        <div class="title">Output</div>
+        <div class="text">
+            <p><span class="statement-lineno"><var>size</var> lines of <var>size</var> characters:</span> the final resolved board. Each character must be one of: 
+            <ul>
+                <li><const>x</const> : water cell.</li>
+                <li><const>o</const> : ship cell (any part of any ship, regardless of its size or shape).</li>
+            </ul>
+            </p>
+        </div>
+    </div>
+
+    <!-- Protocol block -->
+    <div class="blk">
+        <div class="title">Constraints</div>
+        <div class="text">
+            <const>6</const> ≤ <var>size</var> ≤ <const>15</const><br>
+            <const>0</const> ≤ <var>columnMarker</var>, <var>rowMarker</var> < <const><const>10</const></const><br>
+            <const>1</const> ≤ <var>shipsCount</var> ≤ <const>14</const><br>
+            <const>1</const> ≤ <var>shipLength</var> ≤ <const>5</const><br>
+            <br>Allotted response time to output the solution is ≤ <const>5s</const>
+        </div>
+    </div>
+</div>
+
+    </div>
+</div>

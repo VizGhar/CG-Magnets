@@ -1,0 +1,21 @@
+title:
+  1: Brutal
+  2: Brutal
+testIn: |-
+  10
+  9
+  53-3-----4
+  ---2---54
+  4-24-4-424
+  ----1-35-
+  AABBCCDDEE
+  FFGHHIIJJK
+  LMGNNOPQRK
+  LMSTUOPQRV
+  WXSTUYYZZV
+  WXaabbcdde
+  ffgghhciie
+  jkkllmnoop
+  jqqrrmnssp
+isTest: 'true'
+isValidator: 'true'
