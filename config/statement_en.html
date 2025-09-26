@@ -74,28 +74,19 @@
 
     <div class="blk">
         <div class="text">
-            <p><span class="statement-lineno">Line 1:</span> single integer <var>size</var>, the dimension of the square board.</p>
-            <p><span class="statement-lineno">Line 2:</span> <var>size</var> space-separated integers <var>columnMarker</var>, the hints for each column.</p>
-            <p><span class="statement-lineno">Line 3:</span> <var>size</var> space-separated integers <var>rowMarker</var>, the hints for each row.</p>
-            <p><span class="statement-lineno">Line 4:</span> single integer <var>shipsCount</var>, the number of ships to be placed on the board.</p>
-            <p><span class="statement-lineno">Line 5:</span> <var>shipsCount</var> space-separated integers <var>shipLength</var>, the length of each ship in the fleet.</p>
-            <p><span class="statement-lineno">Next <var>size</var> lines:</span> each line contains <var>size</var> characters representing a row of the board. Each character can be:</p>
-            <ul>
-                <li><const>.</const> : unresolved cell</li>
-                <li><const>^</const> : bow of a vertical ship (facing north)</li>
-                <li><const>v</const> : stern of a vertical ship (facing north)</li>
-                <li><const>&lt;</const> : bow of a horizontal ship (facing west)</li>
-                <li><const>></const> : stern of a horizontal ship (facing west)</li>
-                <li><const>#</const> : middle segment of a ship</li>
-                <li><const>o</const> : single-cell ship (submarine)</li>
-                <li><const>x</const> : water cell</li>
-            </ul>
+            <p><span class="statement-lineno">Line 1:</span> single integer <var>width</var> of the board.</p>
+            <p><span class="statement-lineno">Line 2:</span> single integer <var>height</var> of the board.</p>
+            <p><span class="statement-lineno">Line 3:</span> single string <var>topHints</var> of length <var>width</var>.</p>
+            <p><span class="statement-lineno">Line 4:</span> single string <var>leftHints</var> of length <var>height</var>.</p>
+            <p><span class="statement-lineno">Line 5:</span> single string <var>bottomHints</var> of length <var>width</var>.</p>
+            <p><span class="statement-lineno">Line 6:</span> single string <var>rightHints</var> of length <var>height</var>.</p>
+            <p><span class="statement-lineno">Next <var>height</var> lines:</span> each line contains <var>width</var> characters representing connected pairs of cells.</p>
         </div>
     </div>
 
     <!-- Protocol block -->
     <div class="blk">
-        <div class="title">Output</div>
+        <div class="title">Turn output</div>
         <div class="text">
             <p><span class="statement-lineno"><var>size</var> lines of <var>size</var> characters:</span> the final resolved board. Each character must be one of: 
             <ul>
@@ -110,10 +101,8 @@
     <div class="blk">
         <div class="title">Constraints</div>
         <div class="text">
-            <const>6</const> ≤ <var>size</var> ≤ <const>15</const><br>
-            <const>0</const> ≤ <var>columnMarker</var>, <var>rowMarker</var> < <const><const>10</const></const><br>
-            <const>1</const> ≤ <var>shipsCount</var> ≤ <const>14</const><br>
-            <const>1</const> ≤ <var>shipLength</var> ≤ <const>5</const><br>
+            <const>6</const> ≤ <var>width</var> ≤ <const>10</const><br>
+            <const>5</const> ≤ <var>height</var> ≤ <const>9</const><br>
             <br>Allotted response time to output the solution is ≤ <const>5s</const>
         </div>
     </div>
