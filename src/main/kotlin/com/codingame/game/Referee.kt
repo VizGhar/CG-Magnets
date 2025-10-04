@@ -74,6 +74,8 @@ class Referee : AbstractReferee() {
             if (x !in 0..<testCase.width || y !in 0..<testCase.height) { gameManager.loseGame("Out of bounds."); return }
             if (testCase.plan[y][x] in playedCells) { gameManager.loseGame("Position [${x}, ${y}] already taken."); return }
 
+            val errors = checkErrors(x, y, s)
+
             when (s) {
                 '+' -> magnetsPositive[x to y]?.setAlpha(1.0)?.setScale(scale)
                 '-' -> magnetsNegative[x to y]?.setAlpha(1.0)?.setScale(scale)
@@ -88,15 +90,29 @@ class Referee : AbstractReferee() {
                 runCatching { testCase.plan[y + 1][x] }.getOrNull() -> playedCells += testCase.plan[y + 1][x]
             }
 
-            val errors = checkErrors(x, y, s)
-
-            if (errors.isNotEmpty()) { gameManager.loseGame("You broke the rules!\n${errors.joinToString("\n") { it.text }}"); return }
+            if (errors.isNotEmpty()) {
+                visualizeErrors(errors)
+                gameManager.loseGame("You broke the rules!\n${errors.joinToString("\n") { it.text }}")
+                return
+            }
         } catch (_: AbstractPlayer.TimeoutException) {
             gameManager.loseGame("Timeout!")
         }
 
         if (win()) {
             gameManager.winGame()
+        }
+    }
+
+    private fun visualizeErrors(errors: List<Error>) {
+        for (error in errors) {
+            when(error) {
+                is Error.BottomError -> bottomCircles[error.column].setAlpha(1.0).also { tooltips.setTooltipText(it, error.text) }
+                is Error.LeftError -> leftCircles[error.row].setAlpha(1.0).also { tooltips.setTooltipText(it, error.text) }
+                is Error.Poles -> intersections[Tuple4(error.x1, error.y1, error.x2, error.y2)]?.setAlpha(1.0)?.also { tooltips.setTooltipText(it, error.text) }
+                is Error.RightError -> rightCircles[error.row].setAlpha(1.0).also { tooltips.setTooltipText(it, error.text) }
+                is Error.TopError -> topCircles[error.column].setAlpha(1.0).also { tooltips.setTooltipText(it, error.text) }
+            }
         }
     }
 
@@ -131,10 +147,10 @@ class Referee : AbstractReferee() {
             if (testCase.rightMarkers[y] != -1 && gamePlan[y].count { it == '-' } > testCase.rightMarkers[y]) errors += Error.RightError(y)
         }
         for (x in 1..<testCase.width) { for (y in 0..<testCase.height) {
-                if (gamePlan[y][x] in listOf('+', '-') && gamePlan[y][x] == gamePlan[y][x - 1]) errors += Error.Poles(x, y, x - 1, y)
+                if (gamePlan[y][x] in listOf('+', '-') && gamePlan[y][x] == gamePlan[y][x - 1]) errors += Error.Poles(x - 1, y, x, y)
         }}
         for (x in 0..<testCase.width) { for (y in 1..<testCase.height) {
-                if (gamePlan[y][x] in listOf('+', '-') && gamePlan[y][x] == gamePlan[y - 1][x]) errors += Error.Poles(x, y, x, y - 1)
+                if (gamePlan[y][x] in listOf('+', '-') && gamePlan[y][x] == gamePlan[y - 1][x]) errors += Error.Poles(x, y - 1, x, y)
         }}
         return errors
     }
@@ -149,6 +165,14 @@ class Referee : AbstractReferee() {
     val magnetsPositive = mutableMapOf<Pair<Int, Int>, Sprite>()
     val magnetsNegative = mutableMapOf<Pair<Int, Int>, Sprite>()
     val magnetsNeutral = mutableMapOf<Pair<Int, Int>, Sprite>()
+
+    val topCircles = mutableListOf<Circle>()
+    val bottomCircles = mutableListOf<Circle>()
+    val leftCircles = mutableListOf<Circle>()
+    val rightCircles = mutableListOf<Circle>()
+
+    data class Tuple4(val a: Int, val b: Int, val c: Int, val d: Int)
+    val intersections = mutableMapOf<Tuple4, Sprite>()
 
     private fun initBoard() {
         graphic.createSprite().setImage("background.jpg")
@@ -189,9 +213,30 @@ class Referee : AbstractReferee() {
         }
 
         testCase.topMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(1.0).setAnchorX(0.5).setX((scaledCellSize * (i + 0.5)).toInt()).setY(-20).setTint(0xE93333)) }
-        testCase.bottomMarkers.forEachIndexed { i, n -> if (n != -1)cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.0).setAnchorX(0.5).setX((scaledCellSize * (i + 0.5)).toInt()).setY((cellsHeight + 20).toInt()).setTint(0x3453B9)) }
+        testCase.bottomMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.0).setAnchorX(0.5).setX((scaledCellSize * (i + 0.5)).toInt()).setY((cellsHeight + 20).toInt()).setTint(0x3453B9)) }
         testCase.leftMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.5).setAnchorX(1.0).setX(-20).setY((scaledCellSize * (i + 0.5)).toInt()).setTint(0xE93333)) }
         testCase.rightMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.5).setAnchorX(0.0).setX((cellsWidth + 20).toInt()).setY((scaledCellSize * (i + 0.5)).toInt()).setTint(0x3453B9)) }
+        for (column in 0..<testCase.width) {
+            topCircles += graphic.createCircle().setRadius(40).setX((scaledCellSize * (column + 0.5)).toInt()).setY(-33).setFillAlpha(0.0).setLineColor(0xE93333).setLineWidth(8.0).setAlpha(0.0)
+            bottomCircles += graphic.createCircle().setRadius(40).setX((scaledCellSize * (column + 0.5)).toInt()).setY((cellsHeight + 33).toInt()).setFillAlpha(0.0).setLineColor(0xE93333).setLineWidth(8.0).setAlpha(0.0)
+            cells.add(topCircles.last(), bottomCircles.last())
+        }
+        for (row in 0..<testCase.height) {
+            leftCircles += graphic.createCircle().setRadius(40).setX(-28).setY((scaledCellSize * (row + 0.5)).toInt()).setFillAlpha(0.0).setLineColor(0xE93333).setLineWidth(8.0).setAlpha(0.0)
+            rightCircles += graphic.createCircle().setRadius(40).setX((cellsWidth + 28).toInt()).setY((scaledCellSize * (row + 0.5)).toInt()).setFillAlpha(0.0).setLineColor(0xE93333).setLineWidth(8.0).setAlpha(0.0)
+            cells.add(leftCircles.last(), rightCircles.last())
+        }
+        for (x in 1..<testCase.width) {
+            for (y in 0..<testCase.height) {
+                intersections += Tuple4(x - 1, y, x, y) to graphic.createSprite().setImage("bolt.png").setAnchor(0.5).setX((scaledCellSize * x).toInt()).setY((scaledCellSize * (y + 0.5)).toInt()).setScale(scale * 0.8).setAlpha(0.0)
+            }
+        }
+        for (y in 1..<testCase.height) {
+            for (x in 0..<testCase.width) {
+                intersections += Tuple4(x, y - 1, x, y) to graphic.createSprite().setImage("bolt.png").setAnchor(0.5).setX((scaledCellSize * (x + 0.5)).toInt()).setY((scaledCellSize * y).toInt()).setScale(scale * 0.8).setAlpha(0.0)
+            }
+        }
+        cells.add(*intersections.values.toTypedArray())
         cells.add(graphic.createSprite().setImage("+.png").setAnchorY(1.0).setAnchorX(1.0).setX(-20).setY(-20).setTint(0xE93333))
         cells.add(graphic.createSprite().setImage("-.png").setAnchorY(0.0).setAnchorX(0.0).setX((cellsWidth + 20).toInt()).setY((cellsHeight + 20).toInt()).setTint(0x3453B9))
         board.add(cells)
