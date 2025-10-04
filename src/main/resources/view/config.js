@@ -12,8 +12,8 @@ export const modules = [
 // The list of toggles displayed in the options of the viewer
 export const options = [
 	ToggleModule.defineToggle({
-		toggle: 'errors',
-		title: 'SHOW ERROR TOOLTIPS',
+		toggle: 'coords',
+		title: 'SHOW COORDINATES',
 		values: {
 			'ON': true,
 			'OFF': false

@@ -180,6 +180,11 @@ class Referee : AbstractReferee() {
                         cells.add(graphic.createSprite().setImage("wood.png").setAnchor(0.5).setX((scaledCellSize * (x + 1)).toInt()).setY((scaledCellSize * (y + 0.5)).toInt()).setScale(0.2).setAlpha(0.0).setRotation(Math.toRadians(270.0)).also { magnetsNeutral[x to y] = it; magnetsNeutral[x + 1 to y] = it })
                     }
                 }
+
+                cells.add(
+                    graphic.createRectangle().setX((scaledCellSize * x).toInt()).setY((scaledCellSize * y).toInt()).setWidth(scaledCellSize.toInt()).setHeight(scaledCellSize.toInt()).setFillColor(0xFFFFFF).setAlpha(0.5).setZIndex(1).also { toggleModule.displayOnToggleState(it, "coords", true) },
+                    graphic.createText().setAnchor(0.5).setX((scaledCellSize * (x + 0.5)).toInt()).setY((scaledCellSize * (y + 0.5)).toInt()).setText("[$x, $y]").setFontSize((scaledCellSize / 3).toInt()).setFillColor(0x000000).setFontWeight(Text.FontWeight.BOLDER).setZIndex(2).also { toggleModule.displayOnToggleState(it, "coords", true) }
+               )
             }
         }
 
