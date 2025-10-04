@@ -11,10 +11,10 @@ import com.google.inject.Inject
 private data class TestCase(
     val width: Int,
     val height: Int,
-    val topMarkers: List<Int>,
     val leftMarkers: List<Int>,
-    val bottomMarkers: List<Int>,
+    val topMarkers: List<Int>,
     val rightMarkers: List<Int>,
+    val bottomMarkers: List<Int>,
     val plan: List<String>
 )
 
@@ -35,16 +35,14 @@ class Referee : AbstractReferee() {
         testCase = TestCase(
             width = gameManager.testCaseInput[0].toInt(),
             height = gameManager.testCaseInput[1].toInt(),
-            topMarkers = gameManager.testCaseInput[2].map { it.digitToIntOrNull() ?: -1 },
-            leftMarkers = gameManager.testCaseInput[3].map { it.digitToIntOrNull() ?: -1 },
-            bottomMarkers = gameManager.testCaseInput[4].map { it.digitToIntOrNull() ?: -1 },
-            rightMarkers = gameManager.testCaseInput[5].map { it.digitToIntOrNull() ?: -1 },
+            leftMarkers = gameManager.testCaseInput[2].split(" ").map { it.toInt() },
+            topMarkers = gameManager.testCaseInput[3].split(" ").map { it.toInt() },
+            rightMarkers = gameManager.testCaseInput[4].split(" ").map { it.toInt() },
+            bottomMarkers = gameManager.testCaseInput[5].split(" ").map { it.toInt() },
             plan = gameManager.testCaseInput.drop(6)
         )
         initBoard()
-        gameManager.maxTurns =
-            testCase.topMarkers.sumOf { if (it > 0) it else 0 } +
-            testCase.bottomMarkers.sumOf { if (it > 0) it else 0 }
+        gameManager.maxTurns = (testCase.width * testCase.height) / 2
     }
 
     val playedCells = mutableSetOf<Char>()
@@ -53,27 +51,44 @@ class Referee : AbstractReferee() {
             for (line in gameManager.testCaseInput) {
                 gameManager.player.sendInputLine(line.trim())
             }
+        } else {
+            for (y in 0..<testCase.height) {
+                gameManager.player.sendInputLine((0..<testCase.width).joinToString("") { x ->
+                    gamePlan[y][x].takeIf { it != '.' }?.toString() ?: testCase.plan[y][x].toString()
+                })
+            }
         }
 
         try {
             // execution
             gameManager.player.execute()
 
-            if (gameManager.player.outputs[0].isEmpty()) { gameManager.loseGame("Empty output; 2 space separated integers x, y expected."); return }
+            if (gameManager.player.outputs[0].isEmpty()) { gameManager.loseGame("Empty output; space separated 'x', 'y' and '+/-/x' character expected."); return }
             val outputs = gameManager.player.outputs[0].split(" ")
-            if (outputs.size != 2) { gameManager.loseGame("2 space separated integers x, y expected."); return }
-            val (x, y) = runCatching { gameManager.player.outputs[0].split(" ").map { it.toInt() } }.getOrElse { gameManager.loseGame("x or y not integer; 2 space separated integers x, y expected."); return }
+            if (outputs.size != 3) { gameManager.loseGame("Space separated 'x', 'y' and '+/-/x' symbol expected."); return }
+            val (xs, ys, symbol) = gameManager.player.outputs[0].split(" ")
+            val x = xs.toIntOrNull() ?: run { gameManager.loseGame("Invalid output. X coordinate should be integer."); return }
+            val y = ys.toIntOrNull() ?: run { gameManager.loseGame("Invalid output. Y coordinate should be integer."); return }
+            if (symbol.length != 1 && symbol[0] !in listOf('+', '-', 'x')) { gameManager.loseGame("Invalid output. Symbol should be one of +/-/x."); return }
+            val s = symbol[0]
             if (x !in 0..<testCase.width || y !in 0..<testCase.height) { gameManager.loseGame("Out of bounds."); return }
             if (testCase.plan[y][x] in playedCells) { gameManager.loseGame("Position [${x}, ${y}] already taken."); return }
 
-            when {
-                magnetsPositive.contains(x to y) -> magnetsPositive[x to y]?.setAlpha(1.0)?.setScale(scale)
-                magnetsNegative.contains(x to y) -> magnetsNegative[x to y]?.setAlpha(1.0)?.setScale(scale)
-                else -> { gameManager.loseGame("You somehow crashed the game!"); return }
+            when (s) {
+                '+' -> magnetsPositive[x to y]?.setAlpha(1.0)?.setScale(scale)
+                '-' -> magnetsNegative[x to y]?.setAlpha(1.0)?.setScale(scale)
+                'x' -> magnetsNeutral[x to y]?.setAlpha(1.0)?.setScale(scale)
             }
-            playedCells += testCase.plan[y][x]
 
-            val errors = checkErrors()
+            playedCells += testCase.plan[y][x]
+            when(testCase.plan[y][x]) {
+                runCatching { testCase.plan[y][x - 1] }.getOrNull() -> playedCells += testCase.plan[y][x - 1]
+                runCatching { testCase.plan[y][x + 1] }.getOrNull() -> playedCells += testCase.plan[y][x + 1]
+                runCatching { testCase.plan[y - 1][x] }.getOrNull() -> playedCells += testCase.plan[y - 1][x]
+                runCatching { testCase.plan[y + 1][x] }.getOrNull() -> playedCells += testCase.plan[y + 1][x]
+            }
+
+            val errors = checkErrors(x, y, s)
 
             if (errors.isNotEmpty()) { gameManager.loseGame("You broke the rules!"); return }
         } catch (_: AbstractPlayer.TimeoutException) {
@@ -85,14 +100,59 @@ class Referee : AbstractReferee() {
         }
     }
 
-    fun checkErrors(): List<Unit> = emptyList()
-    fun win(): Boolean = true
+    val gamePlan by lazy { Array(testCase.height) { Array(testCase.width) { '.' } } }
+
+    sealed interface Error {
+        data class TopError(val column: Int): Error
+        data class LeftError(val row: Int): Error
+        data class BottomError(val column: Int): Error
+        data class RightError(val row: Int): Error
+    }
+
+    fun checkErrors(x: Int, y: Int, s: Char): List<Error> {
+        if (s == 'x') return emptyList()
+        val c = testCase.plan[y][x]
+        val op = if (s == '+') '-' else '+'
+        gamePlan[y][x] = s
+        when (c) {
+            runCatching { testCase.plan[y][x - 1] }.getOrNull() -> gamePlan[y][x - 1] = op
+            runCatching { testCase.plan[y][x + 1] }.getOrNull() -> gamePlan[y][x + 1] = op
+            runCatching { testCase.plan[y - 1][x] }.getOrNull() -> gamePlan[y - 1][x] = op
+            runCatching { testCase.plan[y + 1][x] }.getOrNull() -> gamePlan[y + 1][x] = op
+        }
+        val te = testCase.topMarkers.mapIndexedNotNull { id, sum ->
+            if (sum == -1) return@mapIndexedNotNull null
+            if (gamePlan.map { it[id] }.count { it == '+' } > sum) Error.TopError(id)
+            else null
+        }
+        val be = testCase.bottomMarkers.mapIndexedNotNull { id, sum ->
+            if (sum == -1) return@mapIndexedNotNull null
+            if (gamePlan.map { it[id] }.count { it == '-' } > sum) Error.BottomError(id)
+            else null
+        }
+        val le = testCase.leftMarkers.mapIndexedNotNull { id, sum ->
+            if (sum == -1) return@mapIndexedNotNull null
+            if (gamePlan[id].count { it == '+' } > sum) Error.LeftError(id)
+            else null
+        }
+        val re = testCase.rightMarkers.mapIndexedNotNull { id, sum ->
+            if (sum == -1) return@mapIndexedNotNull null
+            if (gamePlan[id].count { it == '-' } > sum) Error.RightError(id)
+            else null
+        }
+        return te + be + le + re
+    }
+
+    fun win(): Boolean {
+        return gamePlan.all { it.none { it == '.' } }
+    }
 
     private val cellSize = 150.0
     val scaling = mapOf(9 to 83 / cellSize, 7 to 107 / cellSize, 5 to 150.0 / cellSize)
     val scale by lazy { scaling[testCase.height] ?: throw IllegalStateException() }
     val magnetsPositive = mutableMapOf<Pair<Int, Int>, Sprite>()
     val magnetsNegative = mutableMapOf<Pair<Int, Int>, Sprite>()
+    val magnetsNeutral = mutableMapOf<Pair<Int, Int>, Sprite>()
 
     private fun initBoard() {
         graphic.createSprite().setImage("background.jpg")
@@ -113,13 +173,15 @@ class Referee : AbstractReferee() {
                 when (actual) {
                     targetV -> {
                         cells.add(graphic.createSprite().setImage("magnet_frame.png").setX((scaledCellSize * x).toInt()).setY((scaledCellSize * y).toInt()).setScale(scale))
-                        cells.add(graphic.createSprite().setImage("magnet.png").setAnchor(0.5).setX((scaledCellSize * (x + 0.5)).toInt()).setY((scaledCellSize * (y + 1)).toInt()).setScale(0.2).setAlpha(0.0).also { magnetsPositive[x to y] = it })
-                        cells.add(graphic.createSprite().setImage("magnet.png").setAnchor(0.5).setX((scaledCellSize * (x + 0.5)).toInt()).setY((scaledCellSize * (y + 1)).toInt()).setScale(0.2).setAlpha(0.0).setRotation(Math.toRadians(180.0)).also { magnetsNegative[x to y + 1] = it })
+                        cells.add(graphic.createSprite().setImage("magnet.png").setAnchor(0.5).setX((scaledCellSize * (x + 0.5)).toInt()).setY((scaledCellSize * (y + 1)).toInt()).setScale(0.2).setAlpha(0.0).also { magnetsPositive[x to y] = it; magnetsNegative[x to y + 1] = it })
+                        cells.add(graphic.createSprite().setImage("magnet.png").setAnchor(0.5).setX((scaledCellSize * (x + 0.5)).toInt()).setY((scaledCellSize * (y + 1)).toInt()).setScale(0.2).setAlpha(0.0).setRotation(Math.toRadians(180.0)).also { magnetsNegative[x to y] = it; magnetsPositive[x to y + 1] = it })
+                        cells.add(graphic.createSprite().setImage("wood.png").setAnchor(0.5).setX((scaledCellSize * (x + 0.5)).toInt()).setY((scaledCellSize * (y + 1)).toInt()).setScale(0.2).setAlpha(0.0).also { magnetsNeutral[x to y] = it; magnetsNeutral[x to y + 1] = it })
                     }
                     targetH -> {
                         cells.add(graphic.createSprite().setImage("magnet_frame.png").setX((scaledCellSize * (x + 2)).toInt()).setY((scaledCellSize * y).toInt()).setScale(scale).setRotation(Math.toRadians(90.0)))
-                        cells.add(graphic.createSprite().setImage("magnet.png").setAnchor(0.5).setX((scaledCellSize * (x + 1)).toInt()).setY((scaledCellSize * (y + 0.5)).toInt()).setScale(0.2).setAlpha(0.0).setRotation(Math.toRadians(270.0)).also { magnetsPositive[x to y] = it })
-                        cells.add(graphic.createSprite().setImage("magnet.png").setAnchor(0.5).setX((scaledCellSize * (x + 1)).toInt()).setY((scaledCellSize * (y + 0.5)).toInt()).setScale(0.2).setAlpha(0.0).setRotation(Math.toRadians(90.0)).also { magnetsNegative[x + 1 to y] = it })
+                        cells.add(graphic.createSprite().setImage("magnet.png").setAnchor(0.5).setX((scaledCellSize * (x + 1)).toInt()).setY((scaledCellSize * (y + 0.5)).toInt()).setScale(0.2).setAlpha(0.0).setRotation(Math.toRadians(270.0)).also { magnetsPositive[x to y] = it; magnetsNegative[x + 1 to y] = it })
+                        cells.add(graphic.createSprite().setImage("magnet.png").setAnchor(0.5).setX((scaledCellSize * (x + 1)).toInt()).setY((scaledCellSize * (y + 0.5)).toInt()).setScale(0.2).setAlpha(0.0).setRotation(Math.toRadians(90.0)).also { magnetsNegative[x to y] = it; magnetsPositive[x + 1 to y] = it })
+                        cells.add(graphic.createSprite().setImage("wood.png").setAnchor(0.5).setX((scaledCellSize * (x + 1)).toInt()).setY((scaledCellSize * (y + 0.5)).toInt()).setScale(0.2).setAlpha(0.0).setRotation(Math.toRadians(270.0)).also { magnetsNeutral[x to y] = it; magnetsNeutral[x + 1 to y] = it })
                     }
                 }
             }

@@ -1,55 +1,34 @@
 <div id="statement_back" class="statement_back" style="display:none"></div>
 <div class="statement-body">
-    <!-- GOAL -->
-
     <div class="statement-section statement-goal">
-        <h1>
-            <span class="icon icon-goal">&nbsp;</span>
-            <span>The Goal</span>
-        </h1>
+        <h1> <span class="icon icon-goal">&nbsp;</span> <span>The Goal</span> </h1>
         <div class="statement-goal-content">
-            <p>You are given a <strong>grid</strong> representing a Battleships Solitaire puzzle. Your objective is to reconstruct the hidden <strong>fleet</strong> of ships by filling the grid according to the given clues.</p>
+            <p>You are given a <strong>board</strong> where you must place <strong>magnets</strong> so that all rules are satisfied and the final configuration is <strong>stable</strong> (identical poles must not touch each other).</p>
         </div>
     </div>
-
     <div class="statement-section statement-rules">
-        <h1>
-            <span class="icon icon-rules">&nbsp;</span>
-            <span>Rules</span>
-        </h1>
+        <h1> <span class="icon icon-rules">&nbsp;</span> <span>Rules</span> </h1>
         <div>
             <div class="statement-rules-content">
-                <p>A complete <strong>fleet of ships</strong> must be placed on the grid. The exact composition of the fleet (ship sizes and counts) is provided in the input and may vary between puzzles.</p>
+                <p> Each magnet consists of two parts: a blue north pole (<const>-</const>) and a red south pole (<const>+</const>). You have an unlimited supply of such magnets. Your task is to place the required magnets on the board so that the following conditions are met:
+                    <ul>
+                        <li>Magnets may only be placed on predefined cells.</li>
+                        <li>The numbers on the left side of the board (<var>leftHint</var>) indicate the exact number of
+                            <const>+</const> poles that must appear in each row.</li>
+                        <li>The numbers above the board (<var>topHint</var>) indicate the exact number of
+                            <const>+</const> poles that must appear in each column.</li>
+                        <li>The numbers on the right side of the board (<var>rightHint</var>) indicate the exact number of
+                            <const>-</const> poles that must appear in each row.</li>
+                        <li>The numbers below the board (<var>bottomHint</var>) indicate the exact number of
+                            <const>-</const> poles that must appear in each column.</li>
+                        <li>Not all cells need to contain magnets; some might be occupied by wooden blocks marked with <const>x</const>.</li>
+                    </ul> For a clearer understanding, see the example below: </p>
 
-                <ul>
-                    <li>Ships are straight and occupy consecutive cells either horizontally or vertically.</li>
-                    <li>Ships cannot overlap or touch each other, not even diagonally.</li>
-                    <li>Some cells may already be revealed as <strong>water</strong> or as part of a ship.</li>
-                    <li>Numbers shown next to each row and column indicate how many ship cells must appear in that line.</li>
-                </ul>
-
-                <p>The goal is to place all ships so that every constraint is met and the final configuration matches the provided clues.</p>
-
-<div style="text-align:center;margin:15px">
-    <img src="https://cdn-games.codingame.com/community/3996809-1758310741063/6fb72a9c8ec6d4cdf117a9e527d81423fc3bc2a1354359eeebe6f0b6b6fbe33f.jpg"
-         style="width:400px;max-width:100%">
-    <div style="margin:auto;width:400px;max-width:100%">
-        <em>Solution example</em></div>
-</div>
-
-<p>
-    In the example above, you can see:
-    <ul>
-        <li>A single-cell ship (blue) occupies only one cell (<const>o</const>).</li>
-        <li>All ships of size <const>2</const> or more (yellow and green) have a bow cell (<const>^</const>, <const>&lt;</const>) and a stern cell (<const>v</const>, <const>&gt;</const>), with any middle segments (<const>#</const>) filling the space between.</li>
-        <li>A water cell (<const>x</const>) cannot contain any part of a ship.</li>
-        <li>An unknown cell (<const>.</const>) may either contain part of a ship or water.</li>
-        <li>The solution is invalid because 2 rows and 2 columns are not satisfied (red text).</li>
-        <li>The solution is also invalid because the red ship is diagonally adjacent to the green ship.</li>
-    </ul>
-</p>
-
-
+                <div style="text-align:center;margin:15px">
+                    <img src="https://cdn-games.codingame.com/community/3996809-1759184451664/c2fde3921cb94cc7037ef014b51c15420113940b105cbb76f78d6ae4107d5e44.jpg" style="width:400px;max-width:100%" alt="Example solution">
+                    <div style="margin:auto;width:400px;max-width:100%">
+                        <em>Example of a valid solution</em></div>
+                </div>
             </div>
         </div>
     </div>
@@ -61,52 +40,64 @@
             <span>Additional Info</span>
         </h1>
         <div class="statement-examples-text">
-            - Press the gear icon on the viewer to access extra display options<br/> - This puzzle is based on a logical <a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/magnets.html">game named Magnets by Simon Tatham</a><br> - Source code on <a href="https://github.com/VizGhar/CG-Magnets">my GitHub</a>
+            - Press the gear icon in the viewer to access extra display options<br/>
+            - This puzzle is based on the logic <a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/magnets.html">game Magnets by Simon Tatham</a><br/>
+            - Source code available on <a href="https://github.com/VizGhar/CG-Magnets">GitHub</a>
         </div>
     </div>
 
     <!-- PROTOCOL -->
     <div class="statement-section statement-protocol">
-    <h1>
-        <span class="icon icon-protocol">&nbsp;</span>
-        <span>Game Input</span>
-    </h1>
+        <h1>
+            <span class="icon icon-protocol">&nbsp;</span>
+            <span>Game Input</span>
+        </h1>
+        <div class="title">Initial input</div>
+        <div class="blk">
+            <div class="text">
+                <p><span class="statement-lineno">Line 1:</span> single integer <var>width</var>, the width of the board.</p>
+                <p><span class="statement-lineno">Line 2:</span> single integer <var>height</var>, the height of the board.</p>
+                <p><span class="statement-lineno">Line 3:</span> <var>height</var> space-separated integers <var>leftHint</var> (number of <const>+</const> poles in row <var>i</var>).</p>
+                <p><span class="statement-lineno">Line 4:</span> <var>width</var> space-separated integers <var>topHint</var> (number of <const>+</const> poles in column <var>i</var>).</p>
+                <p><span class="statement-lineno">Line 5:</span> <var>height</var> space-separated integers <var>rightHint</var> (number of <const>-</const> poles in row <var>i</var>).</p>
+                <p><span class="statement-lineno">Line 6:</span> <var>width</var> space-separated integers <var>bottomHint</var> (number of <const>-</const> poles in column <var>i</var>).</p>
+                <p><em>Note:</em> You will receive <const>-1</const> if there is no hint specified for given row or column.</p>
+            </div>
+        </div>
+        <div class="title">Turn input</div>
+        <div class="blk">
+            <div class="text">
+                <p><span class="statement-lineno">Next <var>height</var> lines:</span> each line contains a string of <var>width</var> characters:<br/>
+                    <ul>
+                        <li><const>+</const> → cell occupied by the south pole of a magnet.</li>
+                        <li><const>-</const> → cell occupied by the north pole of a magnet.</li>
+                        <li><const>x</const> → cell occupied by wooden block.</li>
+                        <li>Letter (<const>A–Z, a–z</const>) marking predefined magnet cell pairs. Identical letters mark two adjacent cells that belong to the same magnet.</li>
+                    </ul>
+                </p>
+            </div>
+        </div>
 
-    <div class="blk">
-        <div class="text">
-            <p><span class="statement-lineno">Line 1:</span> single integer <var>width</var> of the board.</p>
-            <p><span class="statement-lineno">Line 2:</span> single integer <var>height</var> of the board.</p>
-            <p><span class="statement-lineno">Line 3:</span> single string <var>topHints</var> of length <var>width</var>.</p>
-            <p><span class="statement-lineno">Line 4:</span> single string <var>leftHints</var> of length <var>height</var>.</p>
-            <p><span class="statement-lineno">Line 5:</span> single string <var>bottomHints</var> of length <var>width</var>.</p>
-            <p><span class="statement-lineno">Line 6:</span> single string <var>rightHints</var> of length <var>height</var>.</p>
-            <p><span class="statement-lineno">Next <var>height</var> lines:</span> each line contains <var>width</var> characters representing connected pairs of cells.</p>
+        <!-- Protocol block -->
+        <div class="blk">
+            <div class="title">Turn output</div>
+            <div class="text">
+                <p><span class="statement-lineno">Single line:</span> three space-separated values - integers <var>x</var> and <var>y</var> and character <var>symbol</var> (one of <const>+</const>, <const>-</const>, <const>x</const>).<br/>
+                This output will place <var>symbol</var> at [<var>x</var>, <var>y</var>], the coordinates of a cell (the matching cell is placed automatically).</p>
+            </div>
+        </div>
+
+        <!-- Protocol block -->
+        <div class="blk">
+            <div class="title">Constraints</div>
+            <div class="text">
+                <const>6</const> ≤ <var>width</var> ≤ <const>10</const><br/>
+                <const>5</const> ≤ <var>height</var> ≤ <const>9</const><br/>
+                <br/>Allotted response time to output in first turn is ≤ <const>5s</const><br/>Allotted response time to output in other turns is ≤ <const>50ms</const>
+
+            </div>
         </div>
     </div>
 
-    <!-- Protocol block -->
-    <div class="blk">
-        <div class="title">Turn output</div>
-        <div class="text">
-            <p><span class="statement-lineno"><var>size</var> lines of <var>size</var> characters:</span> the final resolved board. Each character must be one of: 
-            <ul>
-                <li><const>x</const> : water cell.</li>
-                <li><const>o</const> : ship cell (any part of any ship, regardless of its size or shape).</li>
-            </ul>
-            </p>
-        </div>
-    </div>
-
-    <!-- Protocol block -->
-    <div class="blk">
-        <div class="title">Constraints</div>
-        <div class="text">
-            <const>6</const> ≤ <var>width</var> ≤ <const>10</const><br>
-            <const>5</const> ≤ <var>height</var> ≤ <const>9</const><br>
-            <br>Allotted response time to output the solution is ≤ <const>5s</const>
-        </div>
-    </div>
 </div>
-
-    </div>
 </div>

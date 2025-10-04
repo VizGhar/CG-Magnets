@@ -1,10 +1,9 @@
-read size:int
-loopline size columnMarker:int
-loopline size rowMarker:int
-read shipsCount:int
-loopline shipsCount shipLength:int
-loop size read line:word(size)
-loop size write xxxxxx
-
-STATEMENT
-Reconstruct the hidden fleet.
+read width:int
+read height:int
+loopline height leftHint:int
+loopline width topHint:int
+loopline height rightHint:int
+loopline width bottomHint:int
+gameloop
+loop height read boardRow:word(width)
+write 0 0 +
