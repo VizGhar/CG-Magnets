@@ -1,0 +1,19 @@
+title:
+  1: Hard
+  2: Hard
+testIn: |-
+  8
+  7
+  3 3 3 3 4 1 4
+  3 3 2 3 3 2 2 3
+  3 3 3 4 3 2 3
+  3 3 3 3 3 1 2 3
+  UVWXYbba
+  UVWXYZZa
+  QQRRSSTT
+  IJKOOPPN
+  IJKLLMMN
+  ABCGGEHH
+  ABCDDEFF
+isTest: 'false'
+isValidator: 'true'

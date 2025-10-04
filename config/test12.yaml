@@ -1,0 +1,19 @@
+title:
+  1: Expert
+  2: Expert
+testIn: |-
+  8
+  7
+  -1 4 3 4 -1 -1 1
+  3 -1 -1 2 -1 -1 -1 3
+  4 3 -1 1 -1 -1 -1
+  3 -1 1 3 -1 3 -1 4
+  ABBCDEFF
+  AGGCDEHI
+  JJKLMMHI
+  NOKLPQRR
+  NOSSPQTT
+  UUVWWXYZ
+  aaVbbXYZ
+isTest: 'false'
+isValidator: 'true'

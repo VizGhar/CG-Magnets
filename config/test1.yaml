@@ -1,6 +1,6 @@
 title:
-  1: Easiest
-  2: Easiest
+  1: Simple
+  2: Simple
 testIn: |-
   6
   5
@@ -14,4 +14,4 @@ testIn: |-
   JJKKLL
   MMNNOO
 isTest: 'true'
-isValidator: 'true'
+isValidator: 'false'
