@@ -156,7 +156,7 @@ class Referee : AbstractReferee() {
     }
 
     fun win(): Boolean {
-        return gamePlan.all { it.none { it == '.' } }
+        return playedCells.size == (testCase.width * testCase.height) / 2
     }
 
     private val cellSize = 150.0
