@@ -90,7 +90,7 @@ class Referee : AbstractReferee() {
 
             val errors = checkErrors(x, y, s)
 
-            if (errors.isNotEmpty()) { gameManager.loseGame("You broke the rules!"); return }
+            if (errors.isNotEmpty()) { gameManager.loseGame("You broke the rules!\n${errors.joinToString("\n") { it.text }}"); return }
         } catch (_: AbstractPlayer.TimeoutException) {
             gameManager.loseGame("Timeout!")
         }
@@ -102,15 +102,17 @@ class Referee : AbstractReferee() {
 
     val gamePlan by lazy { Array(testCase.height) { Array(testCase.width) { '.' } } }
 
-    sealed interface Error {
-        data class TopError(val column: Int): Error
-        data class LeftError(val row: Int): Error
-        data class BottomError(val column: Int): Error
-        data class RightError(val row: Int): Error
+    sealed class Error(val text: String) {
+        data class TopError(val column: Int): Error("Too many '+' in column $column")
+        data class LeftError(val row: Int): Error("Too many '+' in row $row")
+        data class BottomError(val column: Int): Error("Too many '-' in column $column")
+        data class RightError(val row: Int): Error("Too many '-' in row $row")
+        data class Poles(val x1: Int, val y1: Int, val x2: Int, val y2: Int): Error("Neighboring cells with same polarity at [$x1, $y1] [$x2, $y2]")
     }
 
     fun checkErrors(x: Int, y: Int, s: Char): List<Error> {
         if (s == 'x') return emptyList()
+        val errors = mutableListOf<Error>()
         val c = testCase.plan[y][x]
         val op = if (s == '+') '-' else '+'
         gamePlan[y][x] = s
@@ -120,27 +122,21 @@ class Referee : AbstractReferee() {
             runCatching { testCase.plan[y - 1][x] }.getOrNull() -> gamePlan[y - 1][x] = op
             runCatching { testCase.plan[y + 1][x] }.getOrNull() -> gamePlan[y + 1][x] = op
         }
-        val te = testCase.topMarkers.mapIndexedNotNull { id, sum ->
-            if (sum == -1) return@mapIndexedNotNull null
-            if (gamePlan.map { it[id] }.count { it == '+' } > sum) Error.TopError(id)
-            else null
+        for (x in 0..<testCase.width) {
+            if (testCase.topMarkers[x] != -1 && gamePlan.map { it[x] }.count { it == '+' } > testCase.topMarkers[x]) errors += Error.TopError(x)
+            if (testCase.bottomMarkers[x] != -1 && gamePlan.map { it[x] }.count { it == '-' } > testCase.bottomMarkers[x]) errors += Error.BottomError(x)
         }
-        val be = testCase.bottomMarkers.mapIndexedNotNull { id, sum ->
-            if (sum == -1) return@mapIndexedNotNull null
-            if (gamePlan.map { it[id] }.count { it == '-' } > sum) Error.BottomError(id)
-            else null
+        for (y in 0..<testCase.height) {
+            if (testCase.leftMarkers[y] != -1 && gamePlan[y].count { it == '+' } > testCase.leftMarkers[y]) errors += Error.LeftError(y)
+            if (testCase.rightMarkers[y] != -1 && gamePlan[y].count { it == '-' } > testCase.rightMarkers[y]) errors += Error.RightError(y)
         }
-        val le = testCase.leftMarkers.mapIndexedNotNull { id, sum ->
-            if (sum == -1) return@mapIndexedNotNull null
-            if (gamePlan[id].count { it == '+' } > sum) Error.LeftError(id)
-            else null
-        }
-        val re = testCase.rightMarkers.mapIndexedNotNull { id, sum ->
-            if (sum == -1) return@mapIndexedNotNull null
-            if (gamePlan[id].count { it == '-' } > sum) Error.RightError(id)
-            else null
-        }
-        return te + be + le + re
+        for (x in 1..<testCase.width) { for (y in 0..<testCase.height) {
+                if (gamePlan[y][x] in listOf('+', '-') && gamePlan[y][x] == gamePlan[y][x - 1]) errors += Error.Poles(x, y, x - 1, y)
+        }}
+        for (x in 0..<testCase.width) { for (y in 1..<testCase.height) {
+                if (gamePlan[y][x] in listOf('+', '-') && gamePlan[y][x] == gamePlan[y - 1][x]) errors += Error.Poles(x, y, x, y - 1)
+        }}
+        return errors
     }
 
     fun win(): Boolean {
@@ -187,12 +183,12 @@ class Referee : AbstractReferee() {
             }
         }
 
-        testCase.topMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(1.0).setAnchorX(0.5).setX((scaledCellSize * (i + 0.5)).toInt()).setY(-20)) }
-        testCase.bottomMarkers.forEachIndexed { i, n -> if (n != -1)cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.0).setAnchorX(0.5).setX((scaledCellSize * (i + 0.5)).toInt()).setY((cellsHeight + 20).toInt())) }
-        testCase.leftMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.5).setAnchorX(1.0).setX(-20).setY((scaledCellSize * (i + 0.5)).toInt())) }
-        testCase.rightMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.5).setAnchorX(0.0).setX((cellsWidth + 20).toInt()).setY((scaledCellSize * (i + 0.5)).toInt())) }
-        cells.add(graphic.createSprite().setImage("+.png").setAnchorY(1.0).setAnchorX(1.0).setX(-20).setY(-20))
-        cells.add(graphic.createSprite().setImage("-.png").setAnchorY(0.0).setAnchorX(0.0).setX((cellsWidth + 20).toInt()).setY((cellsHeight + 20).toInt()))
+        testCase.topMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(1.0).setAnchorX(0.5).setX((scaledCellSize * (i + 0.5)).toInt()).setY(-20).setTint(0xE93333)) }
+        testCase.bottomMarkers.forEachIndexed { i, n -> if (n != -1)cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.0).setAnchorX(0.5).setX((scaledCellSize * (i + 0.5)).toInt()).setY((cellsHeight + 20).toInt()).setTint(0x3453B9)) }
+        testCase.leftMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.5).setAnchorX(1.0).setX(-20).setY((scaledCellSize * (i + 0.5)).toInt()).setTint(0xE93333)) }
+        testCase.rightMarkers.forEachIndexed { i, n -> if (n != -1) cells.add(graphic.createSprite().setImage("$n.png").setAnchorY(0.5).setAnchorX(0.0).setX((cellsWidth + 20).toInt()).setY((scaledCellSize * (i + 0.5)).toInt()).setTint(0x3453B9)) }
+        cells.add(graphic.createSprite().setImage("+.png").setAnchorY(1.0).setAnchorX(1.0).setX(-20).setY(-20).setTint(0xE93333))
+        cells.add(graphic.createSprite().setImage("-.png").setAnchorY(0.0).setAnchorX(0.0).setX((cellsWidth + 20).toInt()).setY((cellsHeight + 20).toInt()).setTint(0x3453B9))
         board.add(cells)
     }
 }
